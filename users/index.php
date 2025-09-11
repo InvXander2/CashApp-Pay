@@ -280,7 +280,7 @@ $formatted_balance = number_format($balance, 2, '.', $balance >= 1000 ? ',' : ''
     top: 15%; /* Position 15% from the top */
     left: 5%; /* Center horizontally: (100% - 80%) / 2 */
     width: 90%; /* 80% of screen width */
-    background: #fff;
+    background: #80EF80;
     padding: 10px 27px;
     box-shadow: 0px 5px 13px 0px rgba(0,0,0,.3);
     font-size: 13.5px; /* Reduced by 20% from assumed default of 16px */
