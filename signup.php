@@ -243,18 +243,18 @@ document.addEventListener('DOMContentLoaded', function () {
     z-index: 90;
     bottom: 80px;
     right: 50px;
-    background: #fff;
+    background: #80EF80;
     padding: 10px 27px;
     box-shadow: 0px 5px 13px 0px rgba(0,0,0,.3);
 }
 .mgm a {
     font-weight: 700;
     display: block;
-    color: #f2d516;
+    color: #fff;
 }
 .mgm a, .mgm a:active {
     transition: all .2s ease;
-    color: #f2d516;
+    color: #fff;
 }
 </style>
 
@@ -273,7 +273,7 @@ var listNames = [
 ];
 
 function getRandomAmount() {
-    return Math.floor(Math.random() * (10000 - 500 + 1)) + 500;
+    return Math.floor(Math.random() * (1200 - 50 + 1)) + 50;
 }
 
 var interval = Math.floor(Math.random() * (15000 - 5000 + 1) + 5000);
