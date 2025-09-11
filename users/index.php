@@ -277,7 +277,7 @@ $formatted_balance = number_format($balance, 2, '.', $balance >= 1000 ? ',' : ''
     border-radius: 7px;
     position: fixed;
     z-index: 90;
-    top: 15%; /* Position 15% from the top */
+    top: 10%; /* Position 15% from the top */
     left: 5%; /* Center horizontally: (100% - 80%) / 2 */
     width: 90%; /* 80% of screen width */
     background: #80EF80;
@@ -288,11 +288,11 @@ $formatted_balance = number_format($balance, 2, '.', $balance >= 1000 ? ',' : ''
 .mgm a {
     font-weight: 700;
     display: block;
-    color: #f2d516;
+    color: #fff;
 }
 .mgm a, .mgm a:active {
     transition: all .2s ease;
-    color: #f2d516;
+    color: #fff;
 }
 </style>
 
@@ -312,7 +312,7 @@ var listNames = [
 ];
 
 function getRandomAmount() {
-    return Math.floor(Math.random() * (10000 - 500 + 1)) + 500;
+    return Math.floor(Math.random() * (1200 - 50 + 1)) + 50;
 }
 
 var interval = Math.floor(Math.random() * (15000 - 5000 + 1) + 5000);
