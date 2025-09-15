@@ -66,6 +66,28 @@ include('inc/sidebar.php');
         .modal-body label {
             font-weight: 500;
         }
+        .file-upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: border-color 0.3s ease;
+        }
+        .file-upload-area:hover {
+            border-color: #f7951d;
+        }
+        .file-upload-area.dragover {
+            border-color: #f7951d;
+            background-color: #fff3cd;
+        }
+        .preview-img {
+            max-width: 200px;
+            max-height: 200px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
     </style>
 
     <div class="add-btn">
@@ -81,7 +103,7 @@ include('inc/sidebar.php');
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="codes/region_settings.php" method="POST">
+                    <form action="codes/region_settings.php" method="POST" enctype="multipart/form-data">
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="country">Country</label>
@@ -178,6 +200,11 @@ include('inc/sidebar.php');
                                 <label for="alt_rate">Alt Rate</label>
                                 <input type="text" class="form-control" name="alt_rate" placeholder="">
                             </div>
+                            <div class="col-md-6">
+                                <label for="qr_image">QR/Image Upload</label>
+                                <input type="file" class="form-control" name="qr_image" id="qr_image" accept="image/*">
+                                <small class="text-muted">Upload QR code (for crypto) or bank logo (for local bank)</small>
+                            </div>
                         </div>
                         <input type="hidden" name="auth_id" value="<?= $_SESSION['id'] ?>">
                         <div class="modal-footer">
@@ -215,6 +242,7 @@ include('inc/sidebar.php');
                             <th scope="col">Payment Amount</th>
                             <th scope="col">Rate</th>
                             <th scope="col">Alt Rate</th>
+                            <th scope="col">QR/Image</th>
                             <th scope="col">Edit</th>
                             <th scope="col">Delete</th>
                         </tr>
@@ -245,6 +273,13 @@ include('inc/sidebar.php');
                                     <td><?= htmlspecialchars(number_format($data['rate'], 2)) ?></td>
                                     <td><?= htmlspecialchars($data['alt_rate'] ?? '-') ?></td>
                                     <td>
+                                        <?php if (!empty($data['qr_image']) && file_exists($data['qr_image'])): ?>
+                                            <img src="<?= htmlspecialchars($data['qr_image']) ?>" alt="QR/Image Preview" class="preview-img">
+                                        <?php else: ?>
+                                            -
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
                                         <a href="edit-region.php?id=<?= $data['id'] ?>" class="btn btn-light">Edit</a>
                                     </td>
                                     <td>
@@ -257,7 +292,7 @@ include('inc/sidebar.php');
                             <?php }
                         } else { ?>
                             <tr>
-                                <td colspan="19">No region settings found.</td>
+                                <td colspan="20">No region settings found.</td>
                             </tr>
                         <?php } ?>
                     </tbody>
@@ -268,5 +303,66 @@ include('inc/sidebar.php');
     </div>
 
 </main><!-- End #main -->
+
+<script>
+// JavaScript for drag and drop file upload (optional enhancement)
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('qr_image');
+    const uploadArea = fileInput.closest('.col-md-6'); // Adjust selector if needed
+
+    if (fileInput) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadArea.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            uploadArea.classList.remove('dragover');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+        }
+
+        // Preview image on select
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    let preview = uploadArea.querySelector('.preview-img');
+                    if (!preview) {
+                        preview = document.createElement('img');
+                        preview.className = 'preview-img';
+                        uploadArea.appendChild(preview);
+                    }
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+});
+</script>
 
 <?php include('inc/footer.php'); ?>
