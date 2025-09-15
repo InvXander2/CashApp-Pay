@@ -60,8 +60,8 @@ if (isset($_POST['withdraw'])) {
         exit(0);
     }
 
-    // Fetch currency and channel details from region_settings based on user's country
-    $payment_query = "SELECT currency, alt_currency, crypto, alt_rate, Channel, Channel_name, Channel_number, chnl_value, chnl_name_value, chnl_number_value, alt_channel, alt_ch_name, alt_ch_number FROM region_settings WHERE country = ? LIMIT 1";
+    // Fetch currency details from region_settings based on user's country
+    $payment_query = "SELECT currency, alt_currency, crypto, alt_rate FROM region_settings WHERE country = ? LIMIT 1";
     $stmt = $con->prepare($payment_query);
     $stmt->bind_param("s", $user_country);
     $stmt->execute();
@@ -74,11 +74,6 @@ if (isset($_POST['withdraw'])) {
         $crypto = $payment['crypto'] ?? 0;
         $rate = $payment['alt_rate'] ?? 1; // Rate for non-crypto case
         $alt_rate = $payment['alt_rate'] ?? 1; // Rate for crypto case
-
-        // Set channel labels based on crypto status
-        $chnl_value = $crypto == 1 ? ($payment['alt_channel'] ?? 'Crypto Channel') : ($payment['chnl_value'] ?? ($payment['Channel'] ?? 'Bank'));
-        $chnl_name_value = $crypto == 1 ? ($payment['alt_ch_name'] ?? 'Crypto Name') : ($payment['chnl_name_value'] ?? ($payment['Channel_name'] ?? 'Account Name'));
-        $chnl_number_value = $crypto == 1 ? ($payment['alt_ch_number'] ?? 'Crypto Address') : ($payment['chnl_number_value'] ?? ($payment['Channel_number'] ?? 'Account Number'));
     } else {
         $_SESSION['error'] = "Failed to fetch payment details for your region.";
         header("Location: ../users/withdrawals.php");
@@ -104,8 +99,8 @@ if (isset($_POST['withdraw'])) {
         $update_stmt->bind_param("ds", $new_balance, $email);
 
         if ($update_stmt->execute()) {
-            // Set success message in the requested format
-            $_SESSION['success'] = "$stored_currency" . number_format($stored_amount, 2) . " Sent to $chnl_number_value $chnl_name_value on $chnl_value MOBILE MONEY, $chnl_number_value ($chnl_name_value).";
+            // Set success message using frontend input values
+            $_SESSION['success'] = "$stored_currency" . number_format($stored_amount, 2) . " Sent to $channel_number ($channel_name) on $channel MOBILE MONEY, $channel_number ($channel_name).";
             header("Location: ../users/withdrawals.php");
             exit(0);
         } else {
