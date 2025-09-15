@@ -85,6 +85,27 @@ if (isset($_POST['withdraw'])) {
     $stored_currency = $crypto == 1 ? $alt_currency : $currency;
     $stored_amount = $crypto == 1 ? $amount * $alt_rate : $amount * $rate;
 
+    // Get channel labels from region_settings for the success message
+    $channel_query = "SELECT Channel, Channel_name, Channel_number, alt_channel, alt_ch_name, alt_ch_number 
+                     FROM region_settings 
+                     WHERE country = ? LIMIT 1";
+    $stmt = $con->prepare($channel_query);
+    $stmt->bind_param("s", $user_country);
+    $stmt->execute();
+    $channel_result = $stmt->get_result();
+    
+    if ($channel_result && $channel_result->num_rows > 0) {
+        $channel_data = $channel_result->fetch_assoc();
+        $channel_label = $crypto == 1 ? ($channel_data['alt_channel'] ?? 'Crypto Channel') : ($channel_data['Channel'] ?? 'Bank');
+        $channel_name_label = $crypto == 1 ? ($channel_data['alt_ch_name'] ?? 'Crypto Name') : ($channel_data['Channel_name'] ?? 'Account Name');
+        $channel_number_label = $crypto == 1 ? ($channel_data['alt_ch_number'] ?? 'Crypto Address') : ($channel_data['Channel_number'] ?? 'Account Number');
+    } else {
+        $channel_label = 'Bank';
+        $channel_name_label = 'Account Name';
+        $channel_number_label = 'Account Number';
+    }
+    $stmt->close();
+
     // Insert withdrawal request using prepared statement
     $query = "INSERT INTO withdrawals (email, amount, currency, channel, channel_name, channel_number, status, created_at) 
               VALUES (?, ?, ?, ?, ?, ?, '0', NOW())";
@@ -99,8 +120,8 @@ if (isset($_POST['withdraw'])) {
         $update_stmt->bind_param("ds", $new_balance, $email);
 
         if ($update_stmt->execute()) {
-            // Set success message
-            $_SESSION['success'] = "USD" . number_format($amount, 2) . " withdrawal request submitted successfully for $channel_name.\nAmount to Receive: $stored_currency" . number_format($stored_amount, 2);
+            // Set success message in the requested format
+            $_SESSION['success'] = "$stored_currency" . number_format($stored_amount, 2) . " Sent to $channel_number_label $channel_name_label on $channel_label MOBILE MONEY, $channel_number_label ($channel_name_label).";
             header("Location: ../users/withdrawals.php");
             exit(0);
         } else {
