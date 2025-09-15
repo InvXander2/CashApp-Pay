@@ -99,8 +99,8 @@ if (isset($_POST['withdraw'])) {
         $update_stmt->bind_param("ds", $new_balance, $email);
 
         if ($update_stmt->execute()) {
-            // Set success message using frontend input values
-            $_SESSION['success'] = "$stored_currency" . number_format($stored_amount, 2) . " Sent to $channel_number ($channel_name) on $channel MOBILE MONEY, $channel_number ($channel_name).";
+            // Set success message
+            $_SESSION['success'] = "USD" . number_format($amount, 2) . " withdrawal request submitted successfully for $channel_name.\nAmount to Receive: $stored_currency" . number_format($stored_amount, 2);
             header("Location: ../users/withdrawals.php");
             exit(0);
         } else {
