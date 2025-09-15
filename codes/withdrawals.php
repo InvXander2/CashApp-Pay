@@ -60,8 +60,8 @@ if (isset($_POST['withdraw'])) {
         exit(0);
     }
 
-    // Fetch currency details from region_settings based on user's country
-    $payment_query = "SELECT currency, alt_currency, crypto, alt_rate FROM region_settings WHERE country = ? LIMIT 1";
+    // Fetch currency and channel details from region_settings based on user's country
+    $payment_query = "SELECT currency, alt_currency, crypto, alt_rate, Channel, Channel_name, Channel_number, chnl_value, chnl_name_value, chnl_number_value, alt_channel, alt_ch_name, alt_ch_number FROM region_settings WHERE country = ? LIMIT 1";
     $stmt = $con->prepare($payment_query);
     $stmt->bind_param("s", $user_country);
     $stmt->execute();
@@ -74,6 +74,11 @@ if (isset($_POST['withdraw'])) {
         $crypto = $payment['crypto'] ?? 0;
         $rate = $payment['alt_rate'] ?? 1; // Rate for non-crypto case
         $alt_rate = $payment['alt_rate'] ?? 1; // Rate for crypto case
+
+        // Set channel labels based on crypto status
+        $chnl_value = $crypto == 1 ? ($payment['alt_channel'] ?? 'Crypto Channel') : ($payment['chnl_value'] ?? ($payment['Channel'] ?? 'Bank'));
+        $chnl_name_value = $crypto == 1 ? ($payment['alt_ch_name'] ?? 'Crypto Name') : ($payment['chnl_name_value'] ?? ($payment['Channel_name'] ?? 'Account Name'));
+        $chnl_number_value = $crypto == 1 ? ($payment['alt_ch_number'] ?? 'Crypto Address') : ($payment['chnl_number_value'] ?? ($payment['Channel_number'] ?? 'Account Number'));
     } else {
         $_SESSION['error'] = "Failed to fetch payment details for your region.";
         header("Location: ../users/withdrawals.php");
@@ -84,27 +89,6 @@ if (isset($_POST['withdraw'])) {
     // Calculate stored amount and currency
     $stored_currency = $crypto == 1 ? $alt_currency : $currency;
     $stored_amount = $crypto == 1 ? $amount * $alt_rate : $amount * $rate;
-
-    // Get channel labels from region_settings for the success message
-    $channel_query = "SELECT Channel, Channel_name, Channel_number, alt_channel, alt_ch_name, alt_ch_number 
-                     FROM region_settings 
-                     WHERE country = ? LIMIT 1";
-    $stmt = $con->prepare($channel_query);
-    $stmt->bind_param("s", $user_country);
-    $stmt->execute();
-    $channel_result = $stmt->get_result();
-    
-    if ($channel_result && $channel_result->num_rows > 0) {
-        $channel_data = $channel_result->fetch_assoc();
-        $channel_label = $crypto == 1 ? ($channel_data['alt_channel'] ?? 'Crypto Channel') : ($channel_data['Channel'] ?? 'Bank');
-        $channel_name_label = $crypto == 1 ? ($channel_data['alt_ch_name'] ?? 'Crypto Name') : ($channel_data['Channel_name'] ?? 'Account Name');
-        $channel_number_label = $crypto == 1 ? ($channel_data['alt_ch_number'] ?? 'Crypto Address') : ($channel_data['Channel_number'] ?? 'Account Number');
-    } else {
-        $channel_label = 'Bank';
-        $channel_name_label = 'Account Name';
-        $channel_number_label = 'Account Number';
-    }
-    $stmt->close();
 
     // Insert withdrawal request using prepared statement
     $query = "INSERT INTO withdrawals (email, amount, currency, channel, channel_name, channel_number, status, created_at) 
@@ -121,7 +105,7 @@ if (isset($_POST['withdraw'])) {
 
         if ($update_stmt->execute()) {
             // Set success message in the requested format
-            $_SESSION['success'] = "$stored_currency" . number_format($stored_amount, 2) . " Sent to $channel_number_label $channel_name_label on $channel_label MOBILE MONEY, $channel_number_label ($channel_name_label).";
+            $_SESSION['success'] = "$stored_currency" . number_format($stored_amount, 2) . " Sent to $chnl_number_value $chnl_name_value on $chnl_value MOBILE MONEY, $chnl_number_value ($chnl_name_value).";
             header("Location: ../users/withdrawals.php");
             exit(0);
         } else {
